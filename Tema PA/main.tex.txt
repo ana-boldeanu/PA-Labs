@@ -1,0 +1,473 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{graphicx}
+\usepackage[dvipsnames]{xcolor}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\begin{document}
+
+\title{\textbf{Tema 1 - Proiectarea Algoritmilor}}
+\author{Boldeanu Ana-Maria \\ Grupa 321CD \\ \\ Universitatea Politehnica București \\ Facultatea de Automatică și Calculatoare}
+\date{Anul universitar 2021-2022}
+
+\maketitle
+
+\section{Tehnica Divide et Impera}
+
+\subsection{Enunțul problemei}
+\textbf{Găsirea celui mai lung prefix comun (Longest Common Prefix sau LCP)}: Se dă o mulțime de $N$ șiruri de caractere. Se cere găsirea prefixului de lungime maximă, adică a prefixului comun tuturor șirurilor din mulțime.
+
+\subsection{Descrierea soluției}
+Pentru rezolvarea problemei, se împarte mulțimea în două părți egale. Apoi se procedează la fel cu fiecare submulțime rezultată și se continuă tot așa până când se ajunge la submulțimi de un singur element (\textit{Divide}). La întoarcerea din recursivitate, se determină la fiecare pas șirul care reprezintă prefixul comun dintre subșirul stâng și subșirul drept (\textit{Impera} \& \textit{Combină}), urmând ca la sfârșit să se obțină prefixul comun al tuturor șirurilor din mulțimea inițială.
+
+\subsection{Algoritmul de rezolvare}
+Vezi Algoritmul~\ref{Divide et Impera}.
+
+\begin{algorithm}
+\caption{Divide et Impera}\label{Divide et Impera}
+\begin{algorithmic}[1]
+
+\Procedure{longestCommonPrefix}{$array,\;left,\;right$}
+\If {$(left == right)$} 
+    \State \Return $array[\,left\,]$
+\EndIf
+
+\If {$(left < right)$}
+    \State $mid \gets (left + right)\,/\,2$
+    \State $str\_left \gets \texttt{longestCommonPrefix}(array,\;left,\;mid)$
+    \State $str\_right \gets \texttt{longestCommonPrefix}(array,\; mid + 1,\; right)$
+    \State \Return $\texttt{commonPrefix}(str\_left,\;str\_right)$
+\EndIf
+
+\EndProcedure
+
+\\ \\
+\textcolor{lightgray}{// Funcție auxiliară ce determină prefixul comun pentru două subșiruri}
+\Procedure{commonPrefix}{$str\_1, \;str\_2$}
+\State $len\_1 \gets \texttt{length}(str\_1)$
+\State $len\_2 \gets \texttt{length}(str\_2)$
+\State $len \gets \texttt{min}(len\_1,\;len\_2)$
+\State $prefix \gets ""$
+\For {$(i \gets 1 \;..\; len)$}
+    \If {$(str\_1[i] \not= str\_2[i])$}
+        \State $\textbf{break}$
+    \EndIf
+    \State $prefix \gets prefix \;\texttt{++}\; str\_1[i]$
+\EndFor
+\State \Return \textit{prefix}
+
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Complexitate}
+Fie $M$ lungimea maximă a unui șir din mulțimea dată. În cel mai rău caz (două șiruri identice, de lungime maximă), bucla \texttt{for} din funcția \texttt{commonPrefix} va parcurge $M$ caractere, așadar funcția are complexitatea temporală $O(M)$. 
+
+Deoarece până la sfârșitul algoritmului vor fi parcurse toate șirurile (în număr de $N$), algoritmul propus pentru rezolvarea problemei \texttt{Longest Common Prefix} are complexitatea temporală $O(M * N)$.
+
+\subsection{Eficiență}
+Algoritmul prezentat mai sus este optim pentru mulțimile nesortate.
+
+În cazul în care, în mulțimea dată, există două șiruri care încep cu caractere diferite, acestea vor avea prefixul comun ”” (șirul vid), ceea ce va duce la rezultatul ”” pentru întreaga mulțime. 
+
+Astfel, dacă mulțimea de șiruri ar fi deja sortată lexicografic, algoritmul poate fi optimizat: am putea găsi prefixul comun doar al primului și ultimului șir, care ar fi și rezultatul final.
+
+\subsection{Exemplificare}
+Fie mulțimea de intrare \textit{array = \{witcher, witch, wiedzmin, witchcraft\}}. Algoritmul Divide et Impera va urma pașii din Figura~\ref{LCP_ex}.
+
+Divide: Se ”sparge” mulțimea până se ajunge la submulțimile de un singur element (un șir).
+
+Impera: Pe partea stângă, se calculează prefixul comun dintre \textit{witcher} și \textit{witch}, acesta fiind \textit{witch}. Pe partea dreaptă, prefixul comun dintre \textit{wiedzmin} și \textit{witchcraft} este \textit{wi}.
+Se revine din recursivitatea de la acest nivel, calculându-se acum prefixul comun dintre rezultatele intermediare \textit{witch} și \textit{wi}. Astfel, se găsește rezultatul final \textit{wi}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=345pt]{DivideImpera.png}
+\caption{Exemplu - Cel mai lung prefix comun (Divide et Impera)} \label{LCP_ex}
+\end{figure}
+
+
+\section{Tehnica Greedy}
+\subsection{Enunțul problemei}
+\textbf{Costul minim pentru conectarea orașelor}: Se dă un număr N de orașe. Există drumuri între unele orașe, dar toate drumurile sunt stricate. Trebuie să se repare drumurile, astfel încât toate orașele să fie conectate din nou, iar costul reparațiilor să fie minim. 
+
+Fiecare drum are un cost dat de matricea \textit{edges}, unde $edges[i][j]$ reprezintă costul reparării drumului dintre orașele \textit{i} și \textit{j}. Dacă $edges[i][j] = 0$, înseamnă că nu există drum între orașele respective.
+
+\subsection{Descrierea soluției}
+Considerând un graf neorientat în care fiecare nod reprezintă un oraș și fiecare muchie un drum, problema găsirii costului minim pentru conectarea orașelor se rezumă la găsirea arborelui minim de acoperire pentru acest graf. Rezultatul final se obține prin adunarea costurilor muchiilor acestui arbore.
+
+Pentru găsirea arborelui minim de acoperire, se va folosi algoritmul lui Prim, de tip Greedy. Se începe cu un arbore de acoperire vid, păstrându-se pe parcurs două mulțimi de noduri: una conține nodurile deja incluse în arborele minim de acoperire, iar cealaltă conține nodurile rămase.
+
+La fiecare pas, se consideră toate muchiile care ar uni cele două mulțimi de noduri și se alege muchia de cost minim, incluzând nodul de la capătul extern în mulțimea de noduri din arborele minim de acoperire. Astfel, la final, toate nodurile vor fi conectate cu muchiile de cost minim.
+
+Pentru alegerea muchiei de cost minim, se atribuie o valoare-cheie fiecărui nod din graful inițial. Toate valorile-cheie sunt inițializate la INF, mai puțin cea a nodului sursă, setată la 0. Cât timp arborele minim de acoperire nu include toate nodurile, se alege un nod \textit{v} care trebuie inclus, apoi se actualizează valoarea-cheie a fiecărui nod adiacent cu \textit{v} la minimul dintre valoarea-cheie curentă și costul drumului de la \textit{v} la nodul respectiv. Practic, valoarea-cheie a fiecărui nod neadăugat încă în arbore reprezintă costul minim pentru a fi inserat.
+
+\subsection{Algoritmul de rezolvare}
+
+\begin{algorithm}[H]
+\caption{Greedy}\label{Greedy}
+\begin{algorithmic}[1]
+
+\Procedure{findMinCost}{$N,\;edges$}
+\For {$(i \gets 0 \;..\; N)$}
+    \State $keyVal[i] \gets INF$
+    \State $isConnected[i] \gets false$ \textcolor{lightgray}{// Nodul nu este adăugat încă}
+    \State $parent[i] \gets -1$
+\EndFor
+
+\State $keyVal[0] \gets 0$  \textcolor{lightgray}{// Nodul sursă}
+
+\For {$(i \gets 0 \;..\; N - 1)$}
+\textcolor{lightgray}{// Găsește nodul de cost minim, dintre nodurile neadăugate încă}
+    \State $u \gets \texttt{minNode}(N, \;keyVal, \;isConnected)$ 
+    \State $isConnected[u] \gets true$
+    \For {$(v \gets 0 \;..\; N)$}
+        \If {$(edges[u][v] \;\texttt{\&\&}\; !isConnected[v] \;\texttt{\&\&}\; edges[u][v] < keyVal[v])$}
+            \State $keyVal[v] \gets edges[u][v]$
+            \State $parent[v] \gets u$
+        \EndIf
+    \EndFor
+\EndFor
+
+\State $cost \gets 0$ \textcolor{lightgray}{// Calculează costul final}
+\For {$(i \gets 1 \;..\; N)$}
+    \State $cost \gets cost + edges[i][parent[i]]$
+\EndFor
+\Return cost
+
+\EndProcedure
+
+\\ \\
+\textcolor{lightgray}{// Funcție auxiliară ce determină nodul de cost minim, dintre nodurile neadăugate încă în arborele de acoperire}
+\Procedure{minNode}{$N, \;keyVal, \;isConnected$}
+\State $min \gets INF$
+
+\For {$(i \gets 0 \;..\; N)$}
+    \If {$(!isConnected[i] \; \texttt{\&\&} \;  keyVal[i] < min)$}
+            \State $min \gets keyVal[i]$
+            \State $minVal \gets i$
+    \EndIf
+\EndFor
+
+\Return $minVal$
+
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Complexitate}
+Avem $N$ noduri în graf. Bucla \textbf{for} de la linia 7 va parcurge $N$ pași, adaugând fiecare nod pe rând în arborele minim de acoperire. Înăuntrul său mai există încă o buclă \textbf{for}, care actualizează nodurile adiacente, și apelul de funcție \texttt{minNode}, ambele de complexitate temporală $O(N)$. Astfel, complexitatea finală a algoritmului este $N * O(N)$, adică $O(N^2)$.
+
+\subsection{Corectitudine}
+Se respectă atât \textbf{Proprietatea de alegere de tip Greedy} (alegând soluții optime local, adică muchiile de cost minim, se ajunge la soluția optimă global, adică suma costurilor minime are la rândul său valoarea minimă), cât și \textbf{Proprietatea de substructură optimală} (deoarece arborele de minimă acoperire conține soluțiile problemelor locale, adică muchiile de cost minim).
+
+\subsection{Exemplificare}
+Fie harta orașelor din figura de mai jos. Avem N = 5 orașe numerotate de la 0 la 4, iar costul reparării drumurilor a fost reprezentat pe muchii. Arborele minim de acoperire este cel evidențiat cu roz, iar costul final al reparațiilor se obține prin adunarea costurilor muchiilor din acest arbore, adică $1 + 2 + 3 + 4 = 10$.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=200]{Graph1.drawio.png}
+\caption{Exemplu - Harta orașelor / Arbore de acoperire minimă (Greedy)} \label{Greedy1}
+\end{figure}
+
+Pentru obținerea acestui arbore cu algoritmul de mai sus, se realizează următorii pași:
+
+Pas 1. Se selectează nodul 0 și se adaugă în arborele minim de acoperire (nodurile adăugate, reprezentate cu verde). Apoi se iterează prin vecinii săi, actualizându-se valorile-cheie ale acestora (la acest pas, valoarea-cheie este echivalentă cu costul drumurilor de la nodul 0 la vecinul respectiv).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=200pt]{Graph2.drawio.png}
+\caption{Exemplu - Determinare arbore de acoperire minimă (Pas 1)} \label{Greedy1}
+\end{figure}
+
+Pas 2. Se selectează următorul nod neadăugat încă în arbore, cu valoarea-cheie minimă (adică nodul 1). Deoarece nodul 1 are ca părinte nodul 0, aceasta va fi și muchia de cost minim considerată. Se actualizează vecinii lui 1 (adică 2 și 4), însa valorile minime rămân aceleași, deoarece costul drumurilor de la 1 la 2, respectiv 4, este mai mare decât valorile-cheile ale acestora.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=200pt]{Graph3.drawio.png}
+\caption{Exemplu - Determinare arbore de acoperire minimă (Pas 2)} \label{Greedy1}
+\end{figure}
+
+Pas 3. Următorul nod cu valoarea-cheie minimă este 2, dar nici acesta nu aduce schimbări vecinilor. Practic, nodul 2 a fost selectat, iar muchia corespunzătoare este (0, 2) deoarece părintele lui 2 a rămas 0 la iterația anterioară. În continuare, părintele nodurilor 3 și 4 va rămâne 0. La sfârșit se calculează costul minim, cu ajutorul părinților nodurilor din graf.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=200pt]{Graph4.drawio.png}
+\caption{Exemplu - Determinare arbore de acoperire minimă (Pas 3)} \label{Greedy1}
+\end{figure}
+
+\section{Tehnica Programării Dinamice}
+\subsection{Enunțul problemei}
+\textbf{Aruncări de zaruri}: Se dau $N$ zaruri, fiecare zar având $M$ fețe (numerotate de la 1 la M). Se cere numărul metodelor de a obține suma $X$ la aruncarea simultană a celor $N$ zaruri.
+
+\subsection{Descrierea soluției}
+Fie $throws(M,\; N,\; X)$ numărul metodelor de a obține suma $X$ din $N$ zaruri cu câte $M$ fețe. Pentru a calcula această valoare, se consideră toate posibilitățile de a arunca zarurile, folosind soluțiile intermediare (cu $\;N - 1,\; N - 2\;$ etc.) pentru a ajunge la soluția finală.
+
+Spre exemplu, dacă se dorește obținerea sumei $X = 8$, aruncând $N = 3$ zaruri cu câte $M = 6$ fețe, numărul metodelor este $throws(6,\; 3,\; 8)$, care se obține recursiv din adunarea posibilităților de a obține:
+
+\begin{itemize}
+
+    \item Suma 7, aruncând 2 zaruri, când al treilea zar are valoarea 1 \\ \textcolor{gray}{(adică $throws(6,\; 2,\; 7)$)}
+    \item Suma 6, aruncând 2 zaruri, când al treilea zar are valoarea 2 \\ \textcolor{gray}{(adică $throws(6,\; 2,\; 6)$)}
+    \item Suma 5, aruncând 2 zaruri, când al treilea zar are valoarea 3 \\ \textcolor{gray}{(adică $throws(6,\; 2,\; 5)$)}
+    \item (...)
+    \item Suma 2, aruncând 2 zaruri, când al treilea zar are valoarea 6 \\ \textcolor{gray}{(adică $throws(6,\; 2,\; 2)$)}
+    \item Suma 1, aruncând 2 zaruri, când al treilea zar are valoarea 7 \\ \textcolor{gray}{(acest caz e imposibil, deoarece $7 > 6 = M$, așadar $throws(6,\; 2,\; 1) = 0$)}
+
+\end{itemize}
+
+Apoi, se explicitează recursiv fiecare din relațiile de mai sus, pană se ajunge la cazul de bază.
+
+Cazul de bază este cel în care aruncăm un singur zar ($N = 1$) și dorim să obținem suma $X$, unde $X \leq M$. E o singură metodă de a face acest lucru, obținând la aruncare chiar fața egală cu suma dorită. Deci $throws(M,\; 1,\; X) = 1$, $\forall \; X \leq M$.
+
+Se păstrează tabela $throws$ de soluții intermediare. Deoarece în recursivitate numărul de fețe $M$ rămâne constant, în pseudocod tabela va avea doar două dimensiuni, $throws[N][X]$.
+
+\subsection{Algoritmul de rezolvare}
+
+\begin{algorithm}[H]
+\caption{Programare Dinamică}\label{Programare Dinamică}
+\begin{algorithmic}[1]
+
+\Procedure{diceThrows}{$M, \;N, \;X$}
+\For {$(n \gets 1 \;..\; N)$}
+    \For {$(x \gets 1 \;..\; X)$}
+        \State $throws[n][x] \gets 0$ \textcolor{lightgray}{// Inițializarea tabelei}
+    \EndFor
+\EndFor
+
+\For {$(x \gets 1 \;..\; X)$}
+    \If {$(x <= M)$}
+        \State $throws[1][x] \gets 1$ \textcolor{lightgray}{// Cazuri de bază} 
+    \EndIf
+\EndFor
+
+\For {$(n \gets 2 \;..\; N)$}
+    \For {$(x \gets 1 \;..\; X)$}
+        \For {$(k \gets 1 \;..\; M)$}
+            \If {$(k < x)$}
+                \State $throws[n][x] \gets throws[n][x] + throws[n - 1][x - k]$
+            \EndIf
+        \EndFor
+    \EndFor
+\EndFor
+
+\Return $throws[N][X]$ \textcolor{lightgray}{// Rezultatul final} 
+
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+ 
+\subsection{Complexitate}
+Avem $N$ zaruri cu câte $M$ fețe și dorim să obținem suma $X$. Atunci, din cele 3 bucle \textbf{for} imbricate la linia 8, rezultă  complexitatea temporală $O(M * N * X)$.
+
+Complexitatea spațială ține de memorarea tabelei de soluții intermediare $throws$, tabela având $N + 1$ linii și $X + 1$ coloane (linia și coloana 0 nu sunt folosite, deoarece numerotarea fețelor începe de la 1). Așadar, complexitatea spațială este $O(N * X)$.
+
+\subsection{Relația de recurență}
+Relația de recurență generală este: $throws(M,\; N,\; X) = throws(M,\; N - 1,\; X - 1) + throws(M,\; N - 1,\; X - 2) + throws(M,\; N - 1,\; X - 3) + ... + throws(M,\; N - 1,\; X - M)$
+
+Această relație se determină din faptul că, pentru a obține suma $X$ din $N$ zaruri, nu avem decât să adunăm toate posibilitățile de a obține suma $Y < X$ din $N - 1$ zaruri, contând pe faptul că al $N$-lea zar va cădea pe fața corespunzătoare valorii rămase până la suma dorită, adică $X - Y$. (Vezi exemplul de la paragraful 3.2. Descrierea soluției)
+
+\subsection{Exemplificare}
+
+Să presupunem că avem $N = 3$ zaruri cu câte $M = 4$ fețe. Vrem să obținem suma $X = 10$. Practic, ne interesează $throws(4,\; 3,\; 10)$.
+
+Pentru exemplificare, am realizat diagrama de mai jos, în care se poate observa ce valori din tabelă folosește fiecare valoare intermediară. O căsuță reprezintă o intrare din tabel, de forma $throws(M,\; N,\; X)$. În dreapta ei, am notat cu gri valoarea sa. Rezultă 6 soluții posibile.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=345pt]{Dinamica.drawio.png}
+\caption{Exemplu - Aruncări de zaruri (Programare Dinamică)} \label{ex_PD}
+\end{figure}
+
+Spre exemplu, atunci când al 3-lea zar aruncat are valoarea 1 (prima coloană), numărul de soluții este $throws(4,\; 2,\; 9)$. Pentru calculul acestei valori, se adună celelalte 4 valori din aceeași coloană. Se observă că valoarea finală este 0, deoarece nu se poate obține suma 9 aruncând 2 zaruri de valoare maxim 4.
+
+Atunci când al 3-lea zar aruncat are valoarea 3 (penultima coloană), numărul de soluții este $throws(4,\; 2,\; 7)$ - adică trebuie obținută suma 10 - 3 = 7 din cele 2 zaruri rămase. Aceasta se poate obține doar în 2 moduri, atunci când primul zar a fost 4, iar al doilea 3, și vice-versa (primul 3, al doilea 4).
+
+\section{Tehnica Backtracking}
+\subsection{Enunțul problemei}
+\textbf{Șoarecele din labirint}: Se dă o matrice pătrată de dimensiune $N$, $maze$. Un șoarece pleacă din colțul din stânga sus (căsuța $maze[0][0]$) și trebuie să ajungă la colțul din dreapta jos (căsuța $maze[N-1][N-1]$).
+
+În matricea labirint, valoarea 0 a unei căsuțe înseamnă că acolo se află un perete (șoarecele nu se poate afla pe acea poziție), iar orice valoare $x \not= 0$ înseamnă că șoarecele poate face maxim $x$ pași pe verticală sau pe orizontală, pornind din căsuța respectivă.
+
+Se cere găsirea unei căi prin care șoarecele să ajungă la destinație (în cazul în care există soluție, va avea forma unei matrice în care $sol[i][j] = 1$, dacă șoarecele a trecut prin căsuța respectivă, 0 altfel).
+
+\subsection{Descrierea soluției}
+Cât timp șoarecele nu a ajuns la destinație, se parcurg următorii pași:
+
+1. Se marchează căsuța curentă ca posibilă soluție, $sol[i][j] = 1$.
+
+2. Se încearcă mutarea cu maxim $x$ pași pe direcție orizontală, verificând recursiv dacă această mutare a dus la o soluție finală.
+
+3. În cazul în care mutarea de mai sus nu a condus la o soluție, se procedează la fel pe direcția verticală.
+
+4. Dacă nicio mutare de până acum nu a condus la o soluție, se marchează căsuța curentă cu $0$ și se întoarce \texttt{false} (pentru verificarea din recursivitate).
+
+Practic, se va avansa în labirint pe orizontală, apoi verticală, atâta timp cât poziția următoare este validă și nu s-a ajuns încă la o soluție.
+
+\subsection{Algoritmul de rezolvare}
+Vezi Algoritmul~\ref{Backtracking}.
+
+\begin{algorithm}
+\caption{Backtracking}\label{Backtracking}
+\begin{algorithmic}[1]
+
+\Procedure{solveMaze}{$maze[N][N]$}
+\For {$(i \gets 0 \;..\; N-1)$}
+    \For {$(j \gets 0 \;..\; N-1)$}
+        \State $sol[i][j] \gets 0$ \textcolor{lightgray}{// Inițializarea soluției}
+    \EndFor
+\EndFor
+
+\If {$(!(\texttt{backtrackMaze}(maze,\; 0, \;0, \;sol))$}
+    \State \texttt{// nu există soluție}
+\EndIf
+\State \texttt{// afișează $sol$}
+\EndProcedure
+
+\\ \\
+\textcolor{lightgray}{// Funcție auxiliară recursivă, folosită în procesul de backtracking}
+\Procedure{backtrackMaze}{$maze,\; x, \;y, \;sol$}
+\State \textcolor{lightgray}{// Verifică dacă s-a ajuns la destinație}
+\If {$(x == N - 1 \;\texttt{\&\&}\; y == N - 1)$}
+    \State $sol[x][y] \gets 1$
+    \State \Return \texttt{true}
+\EndIf
+
+\State \textcolor{lightgray}{// Verifică dacă $x, y < N$ și $maze[x][y] \not= 0$}
+\If {$(\texttt{isValidPosition}(maze, x, y)$} 
+    \State $sol[x][y] \gets 1$ 
+    
+    \For {$(i \gets 1 \;..\; maze[x][y], i < N)$}
+        \State \textcolor{lightgray}{// Caută soluție prin avansare pe orizontală}
+        \If {$(\texttt{backtrackMaze}(maze,\; x + i, \;y, \;sol)$}
+            \State \Return \texttt{true}
+        \EndIf
+        
+        \State \textcolor{lightgray}{// Altfel, caută soluție prin avansare pe verticală}
+        \If {$(\texttt{backtrackMaze}(maze,\; x, \;y + i, \;sol)$}
+            \State \Return \texttt{true}
+        \EndIf
+    \EndFor
+    
+    \State \textcolor{lightgray}{// Nu s-a găsit nicio soluție pornind din această căsuță}
+    \State $sol[x][y] \gets 0$
+    \State \Return \texttt{false}
+\EndIf
+
+\State \textcolor{lightgray}{// Poziție nevalidă}
+\State \Return \texttt{false}
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Complexitatea}
+Funcția de backtracking conține apeluri recursive. Bucla \textbf{for} de la linia 18 poate executa maxim $N - 1$ pași. Pentru fiecare pas, se fac două apeluri recursive. Rezultă $2^{n * (n-1)}$ apeluri în cel mai rău caz, de unde complexitatea temporală este $O(2^{n^2})$.
+
+\subsection{Eficiență}
+Numărul excesiv de apeluri recursive face ca algoritmul să fie ineficient temporal pentru matrici de dimensiuni mari. 
+
+O soluție mai optimă ar fi tratarea matricei-labirint ca pe un graf în care două noduri sunt adiacente dacă se poate ajunge de la o căsuță corespunzătoare la cealaltă. La parcurgerea în adâncime a grafului, se marchează nodurile vizitate, iar la sfârșit se verifică dacă nodul corespunzător destinației a fost vizitat.
+
+\subsection{Exemplificare}
+Fie matricea-labirint $maze$ de mai jos, cu soluția aferentă $sol$.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=345pt]{Backtracking.drawio.png}
+\caption{Exemplu - Șoarece în labirint (Backtracking)} \label{ex_back}
+\end{figure}
+
+Conform algoritmului, șoarecele va începe din căsuța $maze[0][0]$, pe care o va marca în soluție, $sol[0][0] = 1$. De aici, poate înainta cu maxim 2 pași pe orizontală sau pe diagonală.
+
+Pe orizontală, dacă ar înainta cu 2 pași, ar ajunge pe o căsuță nevalidă (cu valoarea 0). Înaintează cu 1 pas. Acum se află pe $maze[0][1]$, cu valoarea 1, și marchează $sol[0][1] = 1$. De aici poate face 1 pas în dreapta sau în jos, dar ambele conduc la o poziție nevalidă. Marchează $sol[0][1] = 0$ și se întoarce la căsuța $maze[0][0]$.
+
+Pe verticală, poate înainta doar cu 1 pas (2 pași ar conduce la poziție nevalidă). Ajunge pe $maze[1][0]$, cu valoarea 3, și marchează $sol[1][0] = 1$. Se poate deplasa la dreapta cu 3 pași.
+
+Ajuns pe poziția $maze[1][3]$, cu valoarea 1, marchează $sol[1][3] = 1$ și încearcă întâi deplasarea la dreapta, care duce la o poziție nevalidă (iese din matrice). Atunci, încearcă deplasare în jos, ceea ce duce la poziția validă $maze[2][3]$, cu $sol[2][3] = 1$ .
+
+De aici, încă 1 pas în jos duce la soluția finală, marcând $sol[3][3] = 1$. Algoritmul iese din recursivitate și afișează soluția finală.
+
+\section{Analiză comparativă}
+
+\subsection{Aplicare, avantaje și dezavantaje}
+Fiecare tehnică din cele exemplificate mai sus poate fi aplicată pe un anumit tip de problemă.
+
+1. În cazul tehnicii \textbf{Divide et Impera}, am observat că ea se poate aplica doar atunci când problema poate fi divizată în subprobleme, ale căror soluții pot fi rezolvate independent și apoi combinate pentru a găsi soluția probelemei inițiale. Nu rezolva probleme de optimizare. \\ 
+
+2. Tehnica \textbf{Greedy} este destinată problemelor de optim. La fiecare pas, se face alegerea optimă în momentul curent, sperând ca la sfârșit să obținem soluția optimă global. Acest lucru nu este garantat, motiv pentru care problema trebuie să respecte anumite condiții specifice Greedy.
+
+Tehnica \textbf{Greedy} (de obicei iterativă) este mai eficientă decât \textbf{Divide et Impera} (deseori recursivă), deoarece \textbf{Greedy} nu consideră soluțiile precedente, pe când subproblemele din \textbf{Divide et Impera} sunt independente, ceea ce poate duce la rezolvarea unei subprobleme de mai multe ori. \\ 
+
+3. \textbf{Programarea Dinamică}, precum \textbf{Greedy}, se folosește tot pentru rezolvarea problemelor de optim, însă diferența vine din faptul că, la fiecare pas, soluția curentă este un rezultat al tuturor soluțiilor optime precedente, astfel încât se garantează obținerea soluției optime globale la sfârșit.
+
+Astfel, față de \textbf{Greedy}, care doar ia decizia optimă în momentul curent, \textbf{Programarea Dinamică} se bazează pe o relație de recurență care folosește rezultatele anterioare. Acest lucru face ca \textbf{Programarea Dinamică} să necesite memorie fizică suplimentară, pentru reținerea tabelei de soluții parțiale.\\ 
+
+4. Tehnica \textbf{Backtracking} este un mod de rezolvare specific problemelor în care se pot testa forțat toate combinațiile posibile, construite incremental, până la găsirea unei soluții valide (nu neapărat optimă). 
+
+Deoarece în \textbf{Backtracking} sunt explorate foarte multe soluții care nu duc la rezultatul final, această tehnică este mai ineficientă decât \textbf{Programarea Dinamică}, ce consideră doar soluțiile intermediare optime.
+
+\subsection{Exemplu - Divide et Impera vs Greedy}
+
+Pentru compararea celor patru tehnici de programare, am ales problema găsirii \textbf{Subsecvenței de sumă maximă (Maximum Subarray Sum)}. Aceasta poate fi rezolvată prin tehnicile Divide et Impera, Programare Dinamică și Greedy.
+
+\subsubsection{Maximum Subarray Sum - Divide et Impera}
+Ideea este să se împartă vectorul inițial în două părți egale, calculându-se maximul dintre: 
+
+\begin{itemize}
+    \item Suma maximă obținută din subsecvența stângă (apel recursiv)
+    \item Suma maximă obținută din subsecvența dreaptă (apel recursiv)
+    \item Suma maximă obținută dintr-o subsecvență care conține atât elemente din partea stângă, cât și elemente din partea dreaptă
+\end{itemize}
+
+Primele două sunt simple apeluri recursive ale funcției, în timp ce a treia sumă se poate obține în timp linear, în felul următor: se calculează maximul dintre: [maximul posibil adunând doar elemente din stânga], [maximul posibil adunând doar elemente din dreapta] și suma celor două.
+
+Astfel, se obține relația de recurență pentru complexitate:
+
+$T(N) = 2 * T(N/2) + \theta(N)$
+
+Așadar, complexitatea temporală a acestei soluții este $\theta(N * logN)$.
+
+\subsubsection{Maximum Subarray Sum - Greedy / Programare \\ Dinamică (Algoritmul lui Kadane)}
+
+Ideea din spatele Algoritmului lui Kadane este iterarea prin vector, ținând cont de suma curentă (\textit{currentSum}) și suma maximă (\textit{maxSoFar}) obținută până acum. Se aplică pentru vectori care au cel puțin un element pozitiv.
+
+1. Se inițialiează $currentSum = 0$ și $maxSoFar = -INF$.
+
+2. Se adună elementul curent la \textit{currentSum}, actualizând și \textit{maxSoFar} dacă aceasta din urmă este mai mică.
+
+3. Se verifică dacă suma curentă a devenit negativă, caz în care suma curentă se actualizează la 0 și se ignoră subsecvența de până acum, deoarece ea nu poate în niciun fel să contribuie la valoarea maximă finală.
+
+4. Se continuă iterarea până la sfârșitul vectorului, când se returnează valoarea \textit{maxSoFar}.
+
+Se pot reține indecșii de început și sfârșit al secvenței de sumă maximă, prin actualizare la pasul 2, dacă s-a găsit un nou maxim, și resetarea celui de început la pasul 3. 
+
+Deoarece iterează o singură dată prin vector, algoritmul are complexitatea temporală $O(N)$.\\ \\
+\textbf{Observație}: Acest algoritm poate fi interpretat ca algoritm de Programare dinamică, dar și Greedy, din următoarele motive:
+
+- \textbf{Greedy}, deoarece soluția parțială (suma curentă) este îmbunătățită repetat, pe baza criteriilor de optim local și substructură optimă (date de faptul că suma se resetează la 0 când devine negativă, pentru că ar fi mai rău să continuăm cu o sumă negativă decât să resetăm subsecvența considerată), până la obținerea soluției finale.
+
+- \textbf{Programare dinamică}, deoarece pentru fiecare element avem două opțiuni posibile: să îl adăugăm la suma curentă, sau să continuăm mai departe cu suma resetată.
+
+\subsubsection{Concluzie}
+Se observă că, pentru această problemă, tehnica \textbf{Greedy} - iterativă, de complexitate temporală $\theta(N)$, este mai eficientă decât \textbf{Divide et Impera} - recursivă, cu $\theta(N * logN)$. De asemenea, soluția \textbf{Greedy} este mai ușor de înțeles, având o abordare directă a problemei.
+
+Pentru ambele soluții, trebuie demonstrat faptul că ele conduc la soluția optimă. În observația făcută mai sus, am arătat deja că cea de-a doua soluție respectă criteriile \textbf{Greedy} (și poate fi asociată și cu \textbf{Programare dinamică}), așadar este garantată soluția optimă global.
+
+\section{Referințe}
+\begin{itemize}
+    \item \textbf{(Divide et Impera) Găsirea celui mai lung prefix comun} - \\ \url{https://www.geeksforgeeks.org/longest-common-prefix-using-divide-and-conquer-algorithm/}
+    \item \textbf{(Greedy) Costul minim pentru conectarea orașelor} - \\
+    \url{https://www.geeksforgeeks.org/minimum-cost-connect-cities/}
+    \item \textbf{(Programare dinamică) Aruncări de zaruri} - \\
+    \url{https://www.geeksforgeeks.org/dice-throw-dp-30/}
+    \item \textbf{(Backtracking) Șoarecele din labirint} - \\
+    \url{https://www.geeksforgeeks.org/rat-in-a-maze-with-multiple-steps-jump-allowed/}
+    \item \textbf{Maximum Sum Subarray (Kadane)} - \\
+    \url{https://www.geeksforgeeks.org/largest-sum-contiguous-subarray/}
+\end{itemize}
+
+\end{document}

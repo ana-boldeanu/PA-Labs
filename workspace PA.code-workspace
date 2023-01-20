@@ -1,0 +1,35 @@
+{
+	"folders": [
+		{
+			"path": "Lab 3 - Greedy"
+		},
+		{
+			"path": "Lab 2 - Divide et Impera"
+		},
+		{
+			"path": "Lab 4 - Programare Dinamica"
+		},
+		{
+			"path": "Lab 5 - Programare Dinamica 2"
+		},
+		{
+			"path": "Lab 6 - Backtracking"
+		},
+		{
+			"path": "Lab 7 - Grafuri Parcurgeri"
+		},
+		{
+			"path": "Lab 8 - Sortare topologica & CTC"
+		},
+		{
+			"path": "Lab 10 - Drumuri de cost minim"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"print_array.h": "c",
+			"stdio.h": "c",
+			"stdlib.h": "c"
+		}
+	}
+}

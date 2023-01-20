@@ -1,0 +1,39 @@
+// Boldeanu Ana-Maria
+// 321CD
+// PA - Tema 2
+
+================================ Problema 1 ================================
+
+    Pentru a gasi numarul minim de muchii astfel incat accesibilitatile din
+graful original sa nu se piarda, ma folosesc de faptul ca pot "aparea", in
+rezultatul final, noi accesibilitati. Spre exemplu, pentru o componenta conexa
+de N noduri si oricate arce, sigur se vor pastra toate accesibilitatile
+initiale daca formez un ciclu cu cele N noduri (adica vor rezulta N arce),
+pentru ca astfel toate nodurile vor fi accesibile intre ele (Acesta este
+cel mai rau caz considerat).
+    Cel de-al doilea caz pe care il consider este cel in care componenta
+conexa nu contine niciun ciclu, deoarece un graf orientat aciclic poate fi
+sortat topologic, astfel incat cele N noduri sa fie parcurse intr-o ordine.
+Atunci nodurile pot fi insiruite si, pentru acest caz, se pot adauga N-1 arce
+in graful final.
+    Pentru a rezolva problema, pornesc de la graful original, orientat, si
+construiesc graful neorientat care ii corespunde (practic inlocuiesc fiecare
+arc cu o muchie). Folosesc graful neorientat pentru a gasi componentele conexe
+din graful original. Apoi, pentru fiecare componenta conexa (sa zicem de 
+dimensiune X), verific daca subgraful care ii corespunde in graful original
+contine ciclu sau nu. In cazul in care contine ciclu, adaug X arce la rezultatul
+final (pentru ca stiu deja ca este nevoie de mai mult decat X-1 arce, dar maxim
+X => fix X arce de adaugat). Altfel, nodurile subgrafului pot fi sortate 
+topologic si adaug X-1 arce in rezultatul final.
+
+
+================================ Problema 3 ================================
+
+    Pentru a gasi ciclul de cost minim, am calculat intai costurile drumurilor
+minime pentru fiecare pereche de noduri cu algoritmul Floyd-Warshall.
+    Cunoscand fiecare cost (u, v), este de ajuns sa calculez suma dintre costul 
+drumului (u, v) si costul drumului (v, u) pentru a afla costul unui ciclu. Daca
+nu exista un drum de la u la v, costul este considerat infinit, asadar acest lucru
+nu va afecta algoritmul.
+    Pe masura ce calculez costul ciclurilor, retin minimul dintre sumele calculate,
+iar minimul la sfarsit este costul ciclului cautat.
